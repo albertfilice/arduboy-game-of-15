@@ -1,2 +1,1 @@
-# Arduboy-base
-Base to build off for the Arduboy
+The game of 15 (sliding tiles) on the Arduboy 
