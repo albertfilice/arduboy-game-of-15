@@ -14,10 +14,17 @@ byte selection[1][2] =
 };
 byte board[4][4] = 
 {
-  {10,13,0,4},
-  {15,6,7,8},
-  {14,1,11,12},
-  {3,9,5,2}
+  {1,2,3,4},
+  {5,6,7,8},
+  {9,10,11,12},
+  {13,14,0,15}
+};
+byte boardComplete[4][4] =
+{
+  {1,2,3,4},
+  {5,6,7,8},
+  {9,10,11,12},
+  {13,14,15,0}
 };
 
 void setup()
@@ -31,11 +38,50 @@ void setup()
   arduboy.display();
   delay(400);
   arduboy.clearDisplay();
-
-
 }
 
-void nudgeTile() {
+void endGame()
+{
+  while(true)
+  {
+    arduboy.clearDisplay();
+    arduboy.setCursor(30, 20);
+    arduboy.print("You Win");
+    arduboy.display();
+  }
+}
+
+void checkBoard()
+{
+  // Check to see if the latest move won the game
+  Serial.println("Checking score");
+  byte count = 1;
+  for(byte h = 0; h < 4; h++)
+  {
+    for(byte i = 0; i < 4; i++)
+    {
+      Serial.println("checking");
+      Serial.println(h);
+      Serial.println(i);
+      Serial.println("Which is");
+      Serial.println(board[h][i]);
+      Serial.println("For");
+      Serial.println(count);
+      if(board[h][i] != count)
+      {
+        return;
+      }
+      count++;
+      if(count == 15)
+      {
+        endGame();
+      }
+    }
+  }
+}
+
+void nudgeTile() 
+{
   Serial.println("Selection x");
   Serial.println(selection[0][0]);
   Serial.println("Selection y");
@@ -53,6 +99,7 @@ void nudgeTile() {
       board[selection[0][1]+1][selection[0][0]] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile above to zero
       board[selection[0][1]][selection[0][0]] = 0;
+      checkBoard();
       return;
     }
   }    
@@ -69,6 +116,7 @@ void nudgeTile() {
       board[selection[0][1]][selection[0][0]+1] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile to the left to zero
       board[selection[0][1]][selection[0][0]] = 0;
+      checkBoard();
       return;
     }
   }
@@ -85,6 +133,7 @@ void nudgeTile() {
       board[selection[0][1]-1][selection[0][0]] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile below to zero
       board[selection[0][1]][selection[0][0]] = 0;
+      checkBoard();
       return;
     }
   }    
@@ -101,12 +150,13 @@ void nudgeTile() {
       board[selection[0][1]][selection[0][0]-1] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile to the right to zero
       board[selection[0][1]][selection[0][0]] = 0;
+      checkBoard();
       return;
     }
   }
 }
 
-void getInput() {
+void play() {
   while(true)
   {
     if(arduboy.pressed(UP_BUTTON))
@@ -208,22 +258,7 @@ void drawBoard()
   arduboy.drawFastHLine(0, 45, 61, 1);
   arduboy.drawFastHLine(0, 60, 61, 1);
   
-//  // Draw the selection if necessary
-//  if(selection[0][0] < 4 && selection[0][1] < 4)
-//  {
-//    arduboy.fillRect((selection[0][0]*15)+1, (selection[0][1]*15)+1, 14, 14, 1);
-//  }
-  
   // Draw the outline for user selection
-//  // If the outline passes over the selection draw it inverse so you an see
-//  if(selection[0][0] == outline[0][0] && selection[0][1] == outline[0][1])
-//  {
-//    arduboy.drawRect((outline[0][0]*15)+1, (outline[0][1]*15)+1, 14, 14, 0);
-//  }
-//  else
-//  {
-//    arduboy.drawRect((outline[0][0]*15)+1, (outline[0][1]*15)+1, 14, 14, 1); 
-//  }
   arduboy.drawRect((selection[0][0]*15)+1, (selection[0][1]*15)+1, 14, 14, 1);
   
   // Print the numbers
@@ -245,6 +280,7 @@ void drawBoard()
       }
     }
   }
+  
   if(logging)
   {
     arduboy.setCursor(75, 5);
@@ -265,6 +301,6 @@ void loop()
   drawBoard();
   
   // Get the input from the user
-  getInput();  
+  play(); 
 }
 
