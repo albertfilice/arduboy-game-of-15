@@ -1,40 +1,21 @@
 #include <SPI.h>
 #include "Arduboy.h"
 
-void setup()
-{
-  Serial.begin(9600);
-}
-
-void loop()
-{
-  Serial.println("Hi");
-  /* Buttons
-    Right Side
-    ==========
-    B (left button) = A0
-    A (right button) = A1
-
-    Left Side
-    =========
-    Up = 8
-    Right = 5
-    Down = 10
-    Left = 9
-*/
-
-#include <SPI.h>
-#include "Arduboy.h"
-
 Arduboy display;
 
 byte tileValue;
 byte tileNumber;
-byte board[4][4] = {
-  {1,2,3,4},
-  {5,6,7,8},
-  {9,10,11,12},
-  {13,14,15,0}
+byte selection[1][2] = 
+{
+  {1,0}
+};
+
+byte board[4][4] = 
+{
+  {10,2,13,4},
+  {15,6,7,8},
+  {14,1,11,12},
+  {3,9,5,0}
 };
 
 void setup()
@@ -51,31 +32,72 @@ void setup()
 
 }
 
+void updateTile() {
+  
+}
+
+void getInput() {  
+  display.display();
+  while(true)
+  {
+    if(display.pressed(RIGHT_BUTTON))
+    {
+      if(selection[0][0] < 4)
+      {
+        selection[0][0]++;
+        display.display();
+      }
+    }
+  }
+}
 
 
 void drawBoard()
 {
   // Draw the grid
+  // Print the vertical lines
   display.drawFastVLine(0, 0, 61, 1);
   display.drawFastVLine(15, 0, 61, 1);
   display.drawFastVLine(30, 0, 61, 1);
   display.drawFastVLine(45, 0, 61, 1);
   display.drawFastVLine(60, 0, 61, 1);
   
+  // Print the horizontal lines
   display.drawFastHLine(0, 0, 61, 1);
   display.drawFastHLine(0, 15, 61, 1);
   display.drawFastHLine(0, 30, 61, 1);
   display.drawFastHLine(0, 45, 61, 1);
   display.drawFastHLine(0, 60, 61, 1);
   
+  // Highlight the current selection
+  display.drawRect((selection[0][0]*15)+1, (selection[0][1]*15)+1, 14, 14, 1); 
   
-//  updateTile(1, 5);
+  // Print the numbers
+  for(byte n = 0; n < 4; n++)
+  {
+    for(byte m = 0; m < 4; m++)
+    {
+      if(board[n][m] > 9)
+      {
+        display.setCursor((m*15)+2, (n*15)+4);
+      }
+      else
+      {
+        display.setCursor((m*15)+5, (n*15)+4);
+      }
+      display.print(board[n][m]);
+    }
+  }
   display.display();
 }
 
 void loop()
 {
+  // Draw the board
   drawBoard();
+  
+  // Get the input from the user
+  getInput();
   
   
 //  for(byte n = 0; n < 4; n++)
@@ -139,4 +161,4 @@ void loop()
 
   
 }
-}
+
