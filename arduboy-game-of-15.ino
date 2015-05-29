@@ -5,10 +5,9 @@ Arduboy arduboy;
 
 byte tileValue;
 byte tileNumber;
-boolean logging = true;
-// up = 1; right = 2; down = 3; left = 4; a = 5; b = 6;
-byte lastButton;
-byte selection[1][2] = 
+boolean logging = false;
+byte lastButton;  // up = 1; right = 2; down = 3; left = 4; a = 5; b = 6;
+byte selection[1][2] =  // [0][0] = y, [0][1] = x
 {
   {0,0}
 };
@@ -54,19 +53,11 @@ void endGame()
 void checkBoard()
 {
   // Check to see if the latest move won the game
-  Serial.println("Checking score");
   byte count = 1;
   for(byte h = 0; h < 4; h++)
   {
     for(byte i = 0; i < 4; i++)
     {
-      Serial.println("checking");
-      Serial.println(h);
-      Serial.println(i);
-      Serial.println("Which is");
-      Serial.println(board[h][i]);
-      Serial.println("For");
-      Serial.println(count);
       if(board[h][i] != count)
       {
         return;
@@ -80,26 +71,209 @@ void checkBoard()
   }
 }
 
+void nudgeRandomAdjacent()
+{
+  if(logging)
+  {
+    Serial.println("Nudging random adjacent");
+    delay(5000);
+  }
+  byte choices[4];
+  byte choiceCount = 0;
+  if(selection[0][0] > 0 && selection[0][0] < 3 && selection[0][1] > 0 && selection[0][1] < 3)
+  {
+    if(logging)
+    {
+      Serial.println("Selection in middle, not on edge");
+      delay(5000);
+    }
+    choices[0] = 1;
+    choices[1] = 2;
+    choices[2] = 3;
+    choices[3] = 4;
+    choiceCount = 4;
+  }
+  else
+  {
+    if(logging)
+    {
+      Serial.println("Selection on edge");
+      delay(5000);
+    }
+    // Tile is not on top edge
+    if(selection[0][1] != 0)
+    {
+      if(logging) { Serial.println("Up"); }
+      choices[choiceCount] = 1;
+      choiceCount++;
+    }
+    // Tile is not on bottom edge
+    if(selection[0][1] != 3)
+    {
+      if(logging) { Serial.println("Down"); }
+      choices[choiceCount] = 3;
+      choiceCount++;
+    }
+    // Tile is not on the right edge
+    if(selection[0][0] != 3)
+    {
+      if(logging) { Serial.println("Right"); }
+      choices[choiceCount] = 2;
+      choiceCount++;
+    }
+    // Tile is not on left edge
+    if(selection[0][0] != 0)
+    {
+      if(logging) { Serial.println("Left"); }
+      choices[choiceCount] = 4;
+      choiceCount++;
+    } 
+    if(logging)
+    {
+      Serial.println("^^^^^^^-------Possibilities!");
+      delay(5000);
+    }
+  }
+  // Pick a random value from choices array
+  if(logging)
+  {
+    Serial.println("Picking random from count of:");
+    Serial.println(choiceCount);
+    delay(5000);
+  }
+  switch (choices[random(choiceCount)])
+  {
+    case 1:
+      if(logging)
+      {
+        Serial.println("Random choice was 1, up");
+        delay(5000);
+      }
+      selection[0][1]--;
+      if(logging)
+      {
+        drawBoard();
+        Serial.println("Should have moved up");
+        delay(5000);
+        Serial.println("Nudging");
+      }
+      nudgeTile();
+      drawBoard();
+      break;
+    case 2:
+      if(logging)
+      {
+        Serial.println("Random choice was 2, right");
+        delay(5000);
+      }
+      selection[0][0]++;
+      if(logging)
+      {
+        drawBoard();
+        Serial.println("Should have moved right");
+        delay(5000);
+        Serial.println("Nudging");
+      }
+      nudgeTile();
+      drawBoard();
+      break;
+    case 3:
+      if(logging)
+      {
+        Serial.println("Random choice was 3, down");
+        delay(5000);
+      }
+      selection[0][1]++;
+      if(logging)
+      {
+        drawBoard();
+        Serial.println("Should have moved down");
+        delay(5000);
+        Serial.println("Nudging");
+      }
+      nudgeTile();
+      drawBoard();
+      break;
+    case 4:
+      if(logging)
+      {
+        Serial.println("Random choice was 4, left");
+        delay(5000);
+      }
+      selection[0][0]--;
+      if(logging)
+      {
+        drawBoard();
+        Serial.println("Should have moved left");
+        delay(5000);
+        Serial.println("Nudging");
+      }
+      nudgeTile();
+      drawBoard();
+      break;
+  }
+}
+
+void scrambleBoard()
+{
+  // Scramble 100 times
+  for(int i = 0; i < 500; i++)
+  {
+    if(logging)
+    {
+      Serial.println("Scramble!!!!!");
+      Serial.println(i);
+      Serial.println("==");
+      delay(1000);
+    }
+    // Loop over the board to and select the empty square
+    for(byte m = 0; m < 4; m++)
+    {
+      for(byte n = 0; n < 4; n++)
+      {
+        if(board[m][n] == 0)
+        {
+          selection[0][0] = n;
+          selection[0][1] = m;
+          if(logging)
+          {
+            drawBoard();
+            Serial.println("Found empty square");
+            delay(1000);
+          }
+        }
+      }
+    }
+    nudgeRandomAdjacent();
+    delay(10);
+  }
+}
+
 void nudgeTile() 
 {
-  Serial.println("Selection x");
-  Serial.println(selection[0][0]);
-  Serial.println("Selection y");
-  Serial.println(selection[0][1]);
-  Serial.println("----------------------");
+  if(logging)
+  {
+    Serial.println("Selection x");
+    Serial.println(selection[0][0]);
+    Serial.println("Selection y");
+    Serial.println(selection[0][1]);
+    Serial.println("----------------------");
+  }
   // Tile is not on bottom edge, see if it can be slid down
   if(selection[0][1] != 3)
   {
-    Serial.println("Square below is:");
+    if(logging)
+    {
+      Serial.println("Square below is:");
+      Serial.println(board[selection[0][1]+1][selection[0][0]]);
+    }
     // Look at the square below, see if it's zero
-    Serial.println(board[selection[0][1]+1][selection[0][0]]);
     if(board[selection[0][1]+1][selection[0][0]] == 0)
     {
       // If the square below is zero, set it to the same value as the square above...
       board[selection[0][1]+1][selection[0][0]] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile above to zero
       board[selection[0][1]][selection[0][0]] = 0;
-      checkBoard();
       return;
     }
   }    
@@ -107,16 +281,18 @@ void nudgeTile()
   // Tile is not on right edge, see if it can be slid to the right
   if(selection[0][0] != 3)
   {
-    Serial.println("Square to the right is:");
+    if(logging)
+    {
+      Serial.println("Square to the right is:");
+      Serial.println(board[selection[0][1]][selection[0][0]+1]);
+    }
     // Look at the square to the right, see if it's zero
-    Serial.println(board[selection[0][1]][selection[0][0]+1]);
     if(board[selection[0][1]][selection[0][0]+1] == 0)
     {
       // If the square to the right is zero, set it to the same value as the square to the left...
       board[selection[0][1]][selection[0][0]+1] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile to the left to zero
       board[selection[0][1]][selection[0][0]] = 0;
-      checkBoard();
       return;
     }
   }
@@ -124,16 +300,18 @@ void nudgeTile()
   // Tile is not on top edge, see if it can be slid up
   if(selection[0][1] != 0)
   {
-    Serial.println("Square above is:");
+    if(logging)
+    {
+      Serial.println("Square above is:");
+      Serial.println(board[selection[0][1]-1][selection[0][0]]);
+    }
     // Look at the square above, see if it's zero
-    Serial.println(board[selection[0][1]-1][selection[0][0]]);
     if(board[selection[0][1]-1][selection[0][0]] == 0)
     {
       // If the square above is zero, set it to the same value as the square below...
       board[selection[0][1]-1][selection[0][0]] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile below to zero
       board[selection[0][1]][selection[0][0]] = 0;
-      checkBoard();
       return;
     }
   }    
@@ -141,16 +319,18 @@ void nudgeTile()
   // Tile is not on the left edge, see if it can be slid to the left
   if(selection[0][0] != 0)
   {
-    Serial.println("Square to the left is:");
+    if(logging)
+    {
+      Serial.println("Square to the left is:");
+      Serial.println(board[selection[0][1]][selection[0][0]-1]);
+    }
     // Look at the square to the left, see if it's zero
-    Serial.println(board[selection[0][1]][selection[0][0]-1]);
     if(board[selection[0][1]][selection[0][0]-1] == 0)
     {
       // If the square to the left is zero, set it to the same value as the square to the right...
       board[selection[0][1]][selection[0][0]-1] = board[selection[0][1]][selection[0][0]];
       // ...then set the tile to the right to zero
       board[selection[0][1]][selection[0][0]] = 0;
-      checkBoard();
       return;
     }
   }
@@ -224,6 +404,7 @@ void play() {
       if(lastButton != 5)
       {
         nudgeTile();
+        checkBoard();
         drawBoard();
         lastButton = 5;
       }
@@ -266,6 +447,7 @@ void drawBoard()
   {
     for(byte m = 0; m < 4; m++)
     {
+      // Each character is 6x8 pixels so place them accordingly 
       if(board[n][m] > 9)
       {
         arduboy.setCursor((m*15)+2, (n*15)+4);
@@ -299,6 +481,9 @@ void loop()
 {
   // Draw the board
   drawBoard();
+  
+  // Scramble the board
+  scrambleBoard();
   
   // Get the input from the user
   play(); 
